@@ -1,0 +1,122 @@
+@model TiendaWeb.Models.Pedido
+
+@{
+    ViewData["Title"] = "Nuevo Pedido";
+    var productos = ViewBag.Productos as List<TiendaWeb.Models.Producto>;
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-cart-plus"></i> Crear Nuevo Pedido</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-12">
+            <form asp-action="Crear" method="post" id="formPedido">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="Cliente" class="form-label"></label>
+                        <input asp-for="Cliente" class="form-control" required />
+                        <span asp-validation-for="Cliente" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h4 class="mt-4">Seleccionar Productos</h4>
+                <table class="table table-striped" id="tablaProductos">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Cantidad</th>
+                            <th>Seleccionar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (productos != null)
+                        {
+                            for (int i = 0; i < productos.Count; i++)
+                            {
+                                <tr>
+                                    <td>@productos[i].Nombre</td>
+                                    <td>@productos[i].Categoria?.Nombre</td>
+                                    <td>@productos[i].Precio.ToString("C2")</td>
+                                    <td>
+                                        @if (productos[i].Stock > 0)
+                                        {
+                                            <span class="badge bg-success">@productos[i].Stock</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Agotado</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <input type="number" name="cantidades" class="form-control cantidad" 
+                                               min="0" max="@productos[i].Stock" value="0" 
+                                               @(productos[i].Stock == 0 ? "disabled" : "") />
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="productoIds" value="@productos[i].Id" 
+                                               class="form-check-input seleccion" 
+                                               @(productos[i].Stock == 0 ? "disabled" : "") />
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info mt-3" id="resumenPedido" style="display: none;">
+                    <strong>Resumen del pedido:</strong>
+                    <span id="totalProductos">0</span> productos seleccionados
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">
+                        <i class="bi bi-save"></i> Crear Pedido
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Script para validar que se seleccione al menos un producto
+        document.getElementById('formPedido').addEventListener('submit', function(e) {
+            var checkboxes = document.querySelectorAll('.seleccion:checked');
+            if (checkboxes.length === 0) {
+                e.preventDefault();
+                alert('Debe seleccionar al menos un producto');
+            }
+        });
+
+        // Script para contar productos seleccionados
+        var checkboxes = document.querySelectorAll('.seleccion');
+        var resumen = document.getElementById('resumenPedido');
+        var totalSpan = document.getElementById('totalProductos');
+
+        checkboxes.forEach(function(cb) {
+            cb.addEventListener('change', actualizarResumen);
+        });
+
+        function actualizarResumen() {
+            var seleccionados = document.querySelectorAll('.seleccion:checked').length;
+            if (seleccionados > 0) {
+                resumen.style.display = 'block';
+                totalSpan.textContent = seleccionados;
+            } else {
+                resumen.style.display = 'none';
+            }
+        }
+    </script>
+}
